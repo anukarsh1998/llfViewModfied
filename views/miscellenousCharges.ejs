@@ -1,0 +1,156 @@
+<head>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.0/jquery.min.js"></script>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" />
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+</head>
+
+   <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+      <a class="navbar-brand" href="#">LLF</a>
+      <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarColor01" aria-controls="navbarColor01" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+    
+      <div class="collapse navbar-collapse" id="navbarColor01">
+        <ul class="navbar-nav mr-auto">
+          <li class="nav-item active">
+            <a class="nav-link" href="#">Home <span class="sr-only">(current)</span></a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="/expense/">Expense</a>
+          </li>
+          <li class="nav-item">
+              <a class="nav-link" href="/procurement/">Procurement</a>
+            </li>
+          <!-- <li class="nav-item">
+            <a class="nav-link" href="/users/timesheet">Timesheet</a>
+          </li> -->
+          <li class="nav-item">
+            <a class="nav-link" href="/users/timesheet">Timesheet</a>
+          </li>
+          
+          <!-- <li class="nav-item">
+              <a class="nav-link" href="/users/timesheet">Image Upload</a>
+          </li> -->
+          <li class="nav-item dropdown" style="margin-left: 800px;">
+            <a class="nav-link dropdown-toggle" id="navbarDropdownMenuLink-4" data-toggle="dropdown" aria-haspopup="true"
+              aria-expanded="false">
+              <i class="fas fa-user "></i>&nbsp; <%= name%> </a>
+            <div class="dropdown-menu dropdown-menu-right dropdown-info" aria-labelledby="navbarDropdownMenuLink-4">
+              <a class="dropdown-item" href="/users/logout">Log out</a>
+            </div>
+          </li>
+        </ul>
+        
+      </div>
+     </nav>
+
+  <div class="container">
+   <br />
+   <h4 align="center">Tour Bill Miscellaneous Expenses</h4>
+   <br />
+   <form method="post" action="/insertprecash" id="formdata"  enctype="multipart/form-data">
+    <div class="table-repsonsive">
+     <span id="error"></span>
+     <table class="table table-bordered" id="item_table">
+      <tr>
+       <th>SLIP NO</th>
+       <th>DATE</th>
+       <th>PARTICULARS(MODE)</th>
+       <th>ACTIVITY CODE</th> 
+       <th>REMARKS</th>
+       <th>AMOUNT</th>
+       <th>UPLOAD FILE</th>
+       <th><button type="button" style="background-color:#2C3E50;" name="add" class="btn btn-success btn-sm add"><span class="glyphicon glyphicon-plus"></span></button></th>
+       <th style="display:none;"></th>
+      </tr>
+     </table>
+     <div align="center">
+    
+      <input type="submit" style="background-color:#2C3E50;" name="submit" class="btn btn-info" value="Submit" />
+     </div>
+    </div>
+   </form>
+  </div>
+ 
+
+
+<script>
+$(document).ready(function(){
+  //alert('Hello pettyCash');
+ var count = 1
+ $(document).on('click', '.add', function(){
+    var cnt = count++;
+    var html = '';
+    html += '<tr>';
+    html += '<td>'+cnt+'</td>';
+    html += '<td><input type="date" name="date" class="form-control " /></td>';
+    html += '<td><input type="text" name="particulars_mode" class="form-control " /></td>';
+    html += '<td><select name="activity_code" class="form-control item_unit"><option value="1">Act/01/01/it/001</option><option value="2">Act/01/01/it/002</option></select></td>';
+    html += '<td><textarea  name="remarks" class="form-control"></textarea></td>';
+    html += '<td><input type="text" name="amount" class="form-control" /></td>';
+    html += '<td><input type="file" onChange="chkFile(this,'+cnt+')" name="fileprety" id="fileprety" class="form-control" /><input type="hidden" value="demo" name="imgpath" id="file_'+cnt+'"></td>';
+    html += '<td style="display:none;"><input  type="hidden" name="parentTourBillId" value="<%= parentTourBillId %>" class="form-control" /></td>';
+    html += '<td><button type="button" name="remove" class="btn btn-danger btn-sm remove"><span class="glyphicon glyphicon-minus"></span></button></td></tr>';
+    
+    $('#item_table').append(html);
+ });
+ 
+ $(document).on('click', '.remove', function(){
+    $(this).closest('tr').remove();
+ });
+
+});
+
+
+$(function () {
+  $('form#formdata').bind('submit', function () {
+
+    let formArrayData = $('form#formdata').serializeArray();
+
+    if(formArrayData.length == 0)
+    {
+        alert('Please add a row first');
+    }
+    else
+    {
+      $.ajax({
+      type: 'post',
+      url: '/expense/tourBillClaim/miscellenousCharges',  
+      data: $('form#formdata').serialize(),
+      success: function (data) {
+        console.log(data);
+        alert(data);
+        location.assign('/expense/tourBillClaim');
+        }
+      });
+    }
+
+    return false;
+  });
+});
+
+
+function chkFile(file1,id) {
+    var file = file1.files[0];
+    var formData = new FormData();
+    formData.append('formData', file);
+
+   
+    $.ajax({
+    type: "POST",
+    url: "/expense/uploadImage",    
+    cache: true,
+    dataType:'json',
+    processData: false,
+    contentType: false,
+    data: formData,
+    success: function (data) {
+      console.log(data);
+    //  var result = JSON.stringify(data)
+     $('#file_'+id).val(data.url);
+     
+     }
+  });
+}
+
+</script>
