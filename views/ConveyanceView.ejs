@@ -33,7 +33,96 @@
     </div>
     
     </div>
+    <div id="conveyModal" class="modal fade">
+        <div class="modal-dialog" role="document">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h5 class="modal-title">Approval Comment</h5>
+              <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+              </button>
+            </div>
+            <div class="modal-body">
+      
+              <div id="detailLoadingSpinner">
+                <center> <img src="/spinner-gif-transparent-background-14.gif" />  </center>
+            </div>
+            <table id="conveyTable" class="table">
     
+            </table>
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-primary" id="submitForApproval" >Submit</button>
+              <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    
+
+
+   <!-- Conveyance Charge Edit Modal  Start -->
+
+   <div id="conveyanceEditModal" class="modal fade ">
+    <div class="modal-dialog" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Conveyance  Charge Form</h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+      
+        <div class="modal-body" id="editModalBody" >
+            <form name="editConveyanceForm" id="editConveyanceForm" >
+             <div class="form-group">
+                <div class="row">
+                    <div class="col-md-6">
+                      <label for="conveyanceName">Name</label>
+                      <input type="text" disabled class="form-control" id="conveyanceName" value=""   name="conveyanceName" required>
+                    </div>
+                    
+                    <div class="col-md-6">
+                    <label for="tourName">TourBill Name</label>
+                      <select id="tourName" class="custom-select custom-select-sm form-control" name="tourName">
+                        
+                      </select>
+                    </div>
+                </div>
+              </div>
+              
+
+              <div class="form-group">
+                  <div class="row">            
+                    <div class="col-md-6">
+                    <label for="place">Place</label>
+                      <input type="text" class="form-control" id="place" value=""   name="place" >
+                    </div>
+                  </div>
+              </div>
+              
+              <div class="form-group">
+                  <div class="row">
+                    <div class="col-md-6">
+                      <label for="amount">Amount</label>
+                      <input type="number" class="form-control" id="amount" value=""   name="amount" >
+                      </div>
+                  </div>     
+              </div>
+              <div class="modal-footer">
+                  <button type="submit" class="btn btn-primary" id="editAirBusButton" data-dismiss="modal">Save</button>
+                  <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+              </div>
+            </form>
+          </div>
+       
+  </div>
+</div>
+
+<!-- Conveyance Charge Edit Modal  End -->
+
+
+
 
 <script>
     $(document).ready(function(){
@@ -47,6 +136,7 @@
             dated:'Date',
             amount : 'Amount',
             createDdate : 'Created Date',
+            editAction: 'edit',
 
         }
 
@@ -74,7 +164,7 @@
         },
         tableDidUpdate: () => {
         console.log('table did update');
- //        anchorClickFunctionalities();
+             anchorClickFunctionalities();
         
         },
         tableWillUnmount: () => console.log('table will unmount'),
@@ -101,14 +191,159 @@
         .done((response)=>{
             console.log('response : '+JSON.stringify(response));
             table.setData(response, columns);
+            anchorClickFunctionalities();
+            addtionalFunctionalities();
 
         })
         .fail((jqXHR,status,error)=>{
             console.log('jqXHR: '+jqXHR);
             console.log('error: '+JSON.stringify(jqXHR));
 
+        }) 
+    function anchorClickFunctionalities()
+    {
+            $('a.conveyanceViewTag').on('click',function(event){
+                    event.stopImmediatePropagation();
+                    event.stopPropagation();
+                    $('#conveyModal').modal('show');
+                    let tourbillId = this.id;
+                    alert('tourbillId  '+tourbillId);
+                    $('#conveyModal').modal('show');
+                    $.ajax({
+                        url : '/expense/getConveyanceDetail',
+                        type:'get',
+                        data : {
+                            tourbillId : tourbillId
+                        },
+                        dataType: 'json',
+                        beforeSend : function(){
+                          $('#detailLoadingSpinner').show();
+                        }
+                    })
+                    .done((response) => {
+                        console.log('ConveyanceDetail  : '+JSON.stringify(response));
+                        $('#detailLoadingSpinner').hide();
+                        if(response.length > 0)
+                        {
+                          let conveyanceRecord = response[0];
+                          let strCreatedDate = new Date(conveyanceRecord.createddate).toLocaleString();
+                          let strdate = new Date(conveyanceRecord.date__c).toLocaleString();
+                          let htmlTable = '';
+                              htmlTable += '<tr>';
+                                  htmlTable += '<td><strong>Name</strong></td>';
+                                  htmlTable += '<td>'+conveyanceRecord.conveyname+'</td>';
+                                  htmlTable += '<td><strong>TourBillClaim Name</strong></td>';
+                                  htmlTable += '<td>'+conveyanceRecord.tourbillname+'</td>';
+                              htmlTable += '</tr>';
+                              htmlTable += '<tr>';
+                                htmlTable += '<td><strong>Amount</strong></td>';
+                                htmlTable += '<td>'+conveyanceRecord.amount__c+'</td>';
+                                htmlTable += '<td><strong>Place</strong></td>';
+                                htmlTable += '<td>'+conveyanceRecord.place__c+'</td>';
+                              htmlTable += '</tr>';
+                              htmlTable += '<tr>';
+                                htmlTable += '<td><strong>Purpose of Travel</strong></td>';
+                               htmlTable += '<td>'+strdate+'</td>';
+                                htmlTable += '<td><strong>Create Date</strong></td>';
+                                htmlTable += '<td>'+strCreatedDate+'</td>';
+                              htmlTable += '</tr>';
+                              $('#conveyTable').empty();
+                              $('#conveyTable').html(htmlTable);
+                        }
+                       
+                    })
+                    .fail((jqXHR, status, error) =>{
+                      $('#detailLoadingSpinner').show();
+                      console.log('jqXHR  : '+JSON.stringify(jqXHR));
+                      console.log('error  : '+error);
+                    })
+                });
+        } 
+        }) 
+        
+        function formatDate(date) {
+          var d = new Date(date),
+              month = '' + (d.getMonth() + 1),
+              day = '' + d.getDate(),
+              year = d.getFullYear();
+      
+          if (month.length < 2) 
+              month = '0' + month;
+          if (day.length < 2) 
+              day = '0' + day;
+      
+          return [year, month ,day].join('-');
+      }
+
+
+    function addtionalFunctionalities()
+    {
+        $('.editConveyance').on('click',function(event){
+            event.stopPropagation();
+            event.stopImmediatePropagation();
+            let tourbillId = this.id;
+            alert('ConveyanceCharge'+tourbillId);
+            $('#conveyanceEditModal').modal('show'); 
+            $('#conveyanceEditModal').modal('show');
+                        $.ajax({
+                            url : '/expense/getConveyanceDetail',
+                            type:'get',
+                            data : {
+                              tourbillId : tourbillId
+                            },
+                            dataType: 'json',
+                            beforeSend : function(){
+                              $('#detailLoadingSpinner').show();
+                            }
+                        })  
+                        .done((response)=>{
+                          console.log('conveyanceChargeDEtail  : '+JSON.stringify(response));
+                          let conveyanceRecord = response[0];
+                         let strdeparture = formatDate(new Date(conveyanceRecord.departure_date__c));
+                          let strarrival = formatDate(new Date(conveyanceRecord.arrival_date__c));
+                          console.log('strdeparture '+strdeparture);
+                          document.forms["editConveyanceForm"]["conveyanceName"].value = conveyanceRecord.conveyname;
+                          document.forms["editConveyanceForm"]["tourName"].value = conveyanceRecord.tourbillname;
+                          document.forms["editConveyanceForm"]["place"].value = conveyanceRecord.place__c;
+                          document.forms["editConveyanceForm"]["amount"].value = conveyanceRecord.amount__c;
+                        })
+                        .fail((jqXHR, status, error) => {
+                          console.log('jqXHR   '+JSON.stringify(jqXHR));
+                          console.log('error  '+error);
+                      })
+    
         })
+        $('#editAirBusButton').on('click',function(event){
 
+          event.preventDefault();
+                    event.stopPropagation();
+                    event.stopImmediatePropagation();
+                    alert('Save Button Clicked !');
+                    var $inputs = $('#editConveyanceForm :input');
 
-    })
-</script>
+                    // not sure if you wanted this, but I thought I'd add it.
+                    // get an associative array of just the values.
+                    var values = {};
+                    $inputs.each(function() {
+                        values[this.name] = $(this).val();
+                    });
+                    
+                    alert('formValues : '+JSON.stringify(values));
+
+                    $.ajax({
+                        url : '/expense/updateConveyanceCharge',
+                        type:'post',
+                        data: values,
+                        dataType : 'json'
+                    })
+                    .done((response) => {
+                          console.log('resonse   :'+response);
+                    })
+                    .fail((jqXHR, status, error) => {
+                          console.log('jqXHR  '+JSON.stringify(jqXHR));
+                    })
+
+        })
+    }
+                   
+    </script>

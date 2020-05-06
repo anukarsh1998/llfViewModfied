@@ -82,6 +82,91 @@
           </div>
         </div>
       </div>
+      
+
+   <!-- airBusRail Edit Modal  Start -->
+
+   <div id="airBusRailEditModal" class="modal fade ">
+    <div class="modal-dialog" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Petty Cash Form</h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+      
+        <div class="modal-body" id="editModalBody" >
+            <form name="editAirBusForm" id="editAirBusForm" >
+             <div class="form-group">
+                <div class="row">
+                    <div class="col-md-6">
+                      <label for="airBusName">Name</label>
+                      <input type="text" disabled class="form-control" id="airBusName" value=""   name="airBusName" required>
+                    </div>
+                    
+                    <div class="col-md-6">
+                    <label for="tourName">TourBill Name</label>
+                      <select id="tourName" class="custom-select custom-select-sm form-control" name="tourName">
+                        
+                      </select>
+                    </div>
+                </div>
+              </div>
+              
+
+              <div class="form-group">
+                  <div class="row">
+                    <div class="col-md-6">
+                      <label for="departureStation">Departure Station</label>
+                      <input type="text" class="form-control" id="departureStation" value=""   name="departureStation" >
+                    </div>
+                    
+                    <div class="col-md-6">
+                    <label for="departureDate">Departure Date</label>
+                      <input type="date" class="form-control" id="departureDate" value=""   name="departureDate" >
+                    </div>
+                  </div>
+              </div>
+
+              <div class="form-group">
+                  <div class="row">
+                    <div class="col-md-6">
+                      <label for="arrivalStation">Arrival Station</label>
+                      <input type="text" class="form-control" id="arrivalStation" value=""   name="arrivalStation" >
+                    </div>
+                    <div class="col-md-6">
+                      <label for="arrivalDate"></label>Arrival Date</label>
+                      <input type="date" class="form-control" id="arrivalDate" value=""   name="arrivalDate" >
+                      </div>
+                    
+                  </div>
+              </div>
+
+              <div class="form-group">
+                  <div class="row">
+                    <div class="col-md-6">
+                      <label for="amount">Amount</label>
+                      <input type="number" class="form-control" id="amount" value=""   name="amount" >
+                      </div>
+                  </div>     
+              </div>
+              <div class="modal-footer">
+                  <button type="submit" class="btn btn-primary" id="editAirBusButton" data-dismiss="modal">Save</button>
+                  <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+              </div>
+            </form>
+          </div>
+       
+  </div>
+</div>
+
+<!-- Petty Cash Edit Modal  End -->
+
+
+
+
+
 
 <script>
     $(document).ready(function(){
@@ -187,7 +272,7 @@
                             {
                               let airRailBusRecord = response[0];
                               let htmlTable = '';
-                              let strDepartureDate = new Date(airRailBusRecord.departur_date__c).toLocaleString();
+                              let strDepartureDate = new Date(airRailBusRecord.departure_date__c).toLocaleString();
                               let strArrivalDate = new Date(airRailBusRecord.arrival_date__c).toLocaleString();
                               let strCreatedDate = new Date(airRailBusRecord.createddate).toLocaleString();
                               htmlTable += '<tr>';
@@ -198,16 +283,16 @@
                               htmlTable += '</tr>';
                                
                               htmlTable += '<tr>';
-                              htmlTable += '<td><strong>Departure Number</strong></td>';
+                              htmlTable += '<td><strong>Departure Stationr</strong></td>';
+                              htmlTable += '<td>'+airRailBusRecord.departure_station__c+'</td>';
+                              htmlTable += '<td><strong>Departure Date</strong></td>';
                               htmlTable += '<td>'+strDepartureDate+'</td>';
-                              htmlTable += '<td><strong>Arrival Date</strong></td>';
-                              htmlTable += '<td>'+strArrivalDate+'</td>';
                               htmlTable += '</tr>';
                               htmlTable += '<tr>';
                                   htmlTable += '<td><strong>Arrival Station</strong></td>';
                                   htmlTable += '<td>'+airRailBusRecord.arrival_station__c+'</td>';
-                                  htmlTable += '<td><strong>Departure Date</strong></td>';
-                                  htmlTable += '<td>'+airRailBusRecord.departure_date__c+'</td>';
+                                  htmlTable += '<td><strong>Arrival Date</strong></td>';
+                                  htmlTable += '<td>'+strArrivalDate+'</td>';
                               htmlTable += '</tr>';
                               htmlTable += '<tr>';
                                   
@@ -222,7 +307,7 @@
                            
                         })
                         .fail((jqXHR, status, error) =>{
-                          $('#detailLoadingSpinner').show();
+                          $('#detailLoadingSpinner').hide();
                           console.log('jqXHR  : '+JSON.stringify(jqXHR));
                           console.log('error  : '+error);
                         })
@@ -237,15 +322,94 @@
 
         }
 
+        function formatDate(date) {
+          var d = new Date(date),
+              month = '' + (d.getMonth() + 1),
+              day = '' + d.getDate(),
+              year = d.getFullYear();
+      
+          if (month.length < 2) 
+              month = '0' + month;
+          if (day.length < 2) 
+              day = '0' + day;
+      
+          return [year, month ,day].join('-');
+      }
+
+
+
     function addtionalFunctionalities()
     {
         $('.editAirRailBus').on('click',function(event){
             event.stopPropagation();
             event.stopImmediatePropagation();
-            
-            alert('airRailBusId');
-            $('#airRailBusModal').modal('show');   
+            let tourbillId = this.id;
+            alert('airRailBusId +'+tourbillId);
+            $('#airBusRailEditModal').modal('show'); 
+            $('#airBusRailEditModal').modal('show');
+                        $.ajax({
+                            url : '/expense/getAirRailBus',
+                            type:'get',
+                            data : {
+                              tourbillId : tourbillId
+                            },
+                            dataType: 'json',
+                            beforeSend : function(){
+                              $('#detailLoadingSpinner').show();
+                            }
+                        })  
+                        .done((response)=>{
+                          console.log('airBusDEtail  : '+JSON.stringify(response));
+                          let airBusRailRecord = response[0];
+                      //    console.log('airBusRailRecord '+airBusRailRecord.departure_date__c);
+                         let strdeparture = formatDate(new Date(airBusRailRecord.departure_date__c));
+                          let strarrival = formatDate(new Date(airBusRailRecord.arrival_date__c));
+                          console.log('strdeparture '+strdeparture);
+                          document.forms["editAirBusForm"]["airBusName"].value = airBusRailRecord.airbusrailname;
+                          document.forms["editAirBusForm"]["tourName"].value = airBusRailRecord.tourbillname;
+                          document.forms["editAirBusForm"]["departureStation"].value = airBusRailRecord.departure_station__c;
+                          document.forms["editAirBusForm"]["departureDate"].value = strdeparture;
+                          document.forms["editAirBusForm"]["arrivalStation"].value = airBusRailRecord.arrival_station__c;
+                          document.forms["editAirBusForm"]["arrivalDate"].value = strarrival;
+                          document.forms["editAirBusForm"]["amount"].value = airBusRailRecord.amount__c;
+
+                        })
+                        .fail((jqXHR, status, error) => {
+                          console.log('jqXHR   '+JSON.stringify(jqXHR));
+                          console.log('error  '+error);
+                      })
     
+        })
+        $('#editAirBusButton').on('click',function(event){
+
+          event.preventDefault();
+                    event.stopPropagation();
+                    event.stopImmediatePropagation();
+                    alert('Save Button Clicked !');
+                    var $inputs = $('#editAirBusForm :input');
+
+                    // not sure if you wanted this, but I thought I'd add it.
+                    // get an associative array of just the values.
+                    var values = {};
+                    $inputs.each(function() {
+                        values[this.name] = $(this).val();
+                    });
+                    
+                    alert('formValues : '+JSON.stringify(values));
+
+                    $.ajax({
+                        url : '/expense/updateAirRailBus',
+                        type:'post',
+                        data: values,
+                        dataType : 'json'
+                    })
+                    .done((response) => {
+                          console.log('resonse   :'+response);
+                    })
+                    .fail((jqXHR, status, error) => {
+                          console.log('jqXHR  '+JSON.stringify(jqXHR));
+                    })
+
         })
     }
     

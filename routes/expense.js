@@ -1059,15 +1059,7 @@ router.get('/getAirRailBus',verify,(request,response)=>{
         response.send({});
   })
 
-})
-
-
-
-
-
-
-
-
+});
 
 router.get('/conveyanceChargesListView',verify,(request,response)=>{
   let objUser = request.user;
@@ -1088,7 +1080,7 @@ router.get('/getConveyanceDetalList',verify,(request,response)=>{
   pool
   .query('SELECT sfid, name, Amount__c,Date__c,Place__c ,createddate from salesforce.Conveyance_Charges__c WHERE Tour_Bill_Claim__c = $1',[tourbillId])
   .then((ConveyanceQueryResult)=>{
-    console.log('ConveyanceQueryResult '+ConveyanceQueryResult.rows);
+    console.log('ConveyanceQueryResult '+JSON.stringify(ConveyanceQueryResult.rows));
     if(ConveyanceQueryResult.rowCount>0)
     {
           let modifiedAirBuslList = [],i =1; 
@@ -1101,10 +1093,12 @@ router.get('/getConveyanceDetalList',verify,(request,response)=>{
         let strDate3 = strDate2.toLocaleString();
         obj.sequence = i;
         obj.place=eachRecord.place__c;
-        obj.name = eachRecord.name;
+        obj.name = '<a href="#" class="conveyanceViewTag" id="'+eachRecord.sfid+'" >'+eachRecord.name+'</a>';
         obj.amount = eachRecord.amount__c;
         obj.createDdate = strDate;
         obj.dated=strDate3;
+        obj.editAction = '<button href="#" class="btn btn-primary editConveyance" id="'+eachRecord.sfid+'" >Edit</button>'
+      
            i= i+1;
         modifiedAirBuslList.push(obj);
       })
@@ -1119,6 +1113,41 @@ router.get('/getConveyanceDetalList',verify,(request,response)=>{
 
   })
 });
+
+router.get('/getConveyanceDetail',verify,(request,response)=>{
+
+  let tourbillId = request.query.tourbillId;
+  console.log('tourbillId  : '+tourbillId);
+  let queryText = 'SELECT conveyancename.sfid, conveyancename.place__c, conveyancename.amount__c,conveyancename.date__c, conveyancename.name as conveyname ,tourBill.name as tourbillname,conveyancename.createddate '+
+                   'FROM salesforce.Conveyance_Charges__c conveyancename '+ 
+                   'INNER JOIN salesforce.Tour_Bill_Claim__c tourBill '+
+                   'ON conveyancename.Tour_Bill_Claim__c =  tourBill.sfid '+
+                   'WHERE  conveyancename.sfid= $1 ';
+
+  pool
+  .query(queryText,[tourbillId])
+  .then((conveyanceQueryResult) => {
+        console.log('conveyanceQueryResult tourill  '+JSON.stringify(conveyanceQueryResult.rows));
+        if(conveyanceQueryResult.rowCount > 0)
+        {
+          response.send(conveyanceQueryResult.rows);
+        }
+        else
+        {
+          response.send({});
+        }
+         
+  })
+  .catch((conveyanceQueryError) => {
+        console.log('conveyanceQueryError  '+conveyanceQueryError.stack);
+        response.send({});
+  })
+
+
+})
+
+
+
 router.get('/boardingLodgingListView',verify,(request,response)=>{
   let objUser = request.user;
   console.log('objUser  : '+JSON.stringify(objUser));
@@ -1128,7 +1157,7 @@ router.get('/boardingLodgingListView',verify,(request,response)=>{
 
   response.render('boardingLodging', {tourbillId});
 
-})
+});
 router.get('/getBoardingLodgingDetalList',verify,(request,response)=>{
 
   let objUser = request.user;
@@ -1153,12 +1182,13 @@ router.get('/getBoardingLodgingDetalList',verify,(request,response)=>{
         let strDateTo = strto.toLocaleString();
         obj.sequence = i;
         obj.place=eachRecord.place_journey__c;
-        obj.name = eachRecord.name;
+        obj.name = '<a href="#" class="boardingTag" id="'+eachRecord.sfid+'" >'+eachRecord.name+'</a>';
         obj.amount = eachRecord.total_amount__c;
         obj.from=strDateFrom;
         obj.to=strDateTo;
         obj.createDdate = strDate;
-         i= i+1;
+        obj.editAction = '<button href="#" class="btn btn-primary editBoarding" id="'+eachRecord.sfid+'" >Edit</button>'
+        i= i+1;
         modifiedAirBuslList.push(obj);
       })
       response.send(modifiedAirBuslList); 
@@ -1172,6 +1202,38 @@ router.get('/getBoardingLodgingDetalList',verify,(request,response)=>{
 
   })
 });
+
+
+router.get('/getBoardingDetail',verify,(request,response)=>{
+  let tourbillId = request.query.tourbillId;
+  console.log('tourbillId  : '+tourbillId);
+  let queryText = 'SELECT boradLoad.sfid,boradLoad.No_of_Days__c,boradLoad.Stay_Option__c,boradLoad.Place_Journey__c, boradLoad.total_amount__c, boradLoad.name as boardingname ,tourBill.name as tourbillname,boradLoad.createddate '+
+                   'FROM salesforce.Boarding_Lodging__c boradLoad '+ 
+                   'INNER JOIN salesforce.Tour_Bill_Claim__c tourBill '+
+                   'ON boradLoad.Tour_Bill_Claim__c =  tourBill.sfid '+
+                   'WHERE  boradLoad.sfid= $1 ';
+
+  pool
+  .query(queryText,[tourbillId])
+  .then((QueryResult) => {
+        console.log('QueryResult  '+JSON.stringify(QueryResult.rows));
+        if(QueryResult.rowCount > 0)
+        {
+          response.send(QueryResult.rows);
+        }
+        else
+        {
+          response.send({});
+        }
+         
+  })
+  .catch((QueryError) => {
+        console.log('QueryError jsfkjj '+QueryError.stack);
+        response.send({});
+  })
+});
+
+
 
 router.get('/telephoneFoodCharge',verify,(request,response)=>{
   let objUser = request.user;
@@ -1199,11 +1261,12 @@ router.get('/gettelephoneFoodChargeDetalList',verify,(request,response)=>{
         let createdDate = new Date(eachRecord.createddate);
         let strDate = createdDate.toLocaleString();
         obj.sequence = i;
-        obj.name = eachRecord.name;
+        obj.name = '<a href="#" class="telephoneChargeTag" id="'+eachRecord.sfid+'" >'+eachRecord.name+'</a>';
         obj.amount = eachRecord.total_amount__c;
         obj.fooding=eachRecord.fooding_expense__c;
         obj.laundry=eachRecord.laundry_expense__c;
         obj.createDdate = strDate;
+        obj.editAction = '<button href="#" class="btn btn-primary editFooding" id="'+eachRecord.sfid+'" >Edit</button>'
            i= i+1;
            modifiedFoodChargeList.push(obj);
       })
@@ -1218,6 +1281,36 @@ router.get('/gettelephoneFoodChargeDetalList',verify,(request,response)=>{
 
   })
 });
+
+router.get('/gettelephoneFoodChargeDetail',verify,(request,response)=>{
+  let tourbillId = request.query.tourbillId;
+  console.log('tourbillId  : '+tourbillId);
+  let queryText = 'SELECT charge.sfid, charge.total_amount__c,charge.Fooding_Expense__c,charge.Laundry_Expense__c, charge.name as chargegname ,tourBill.name as tourbillname,charge.createddate '+
+                   'FROM salesforce.Telephone_Fooding_Laundry_Expenses__c charge '+ 
+                   'INNER JOIN salesforce.Tour_Bill_Claim__c tourBill '+
+                   'ON charge.Tour_Bill_Claim__c =  tourBill.sfid '+
+                   'WHERE  charge.sfid= $1 ';
+
+  pool
+  .query(queryText,[tourbillId])
+  .then((QueryResult) => {
+        console.log('QueryResult  '+JSON.stringify(QueryResult.rows));
+        if(QueryResult.rowCount > 0)
+        {
+          response.send(QueryResult.rows);
+        }
+        else
+        {
+          response.send({});
+        }
+         
+  })
+  .catch((QueryError) => {
+        console.log('QueryError jsfkjj '+QueryError.stack);
+        response.send({});
+  })
+});
+
 
 router.get('/miscellaneousCharge',verify,(request,response)=>{
   let objUser = request.user;
@@ -1237,7 +1330,7 @@ router.get('/getMiscellaneousDetailList',verify,(request,response)=>{
   pool
   .query('SELECT sfid, name, 	Amount__c,Particulars_Mode__c,Date__c,Remarks__c ,createddate from salesforce.Miscellaneous_Expenses__c WHERE Tour_Bill_Claim__c = $1',[tourbillId])
   .then((miscellaneousQueryResult)=>{
-    console.log('miscellaneousQueryResult '+miscellaneousQueryResult.rows);
+    console.log('miscellaneousQueryResult '+JSON.stringify(miscellaneousQueryResult.rows));
     if(miscellaneousQueryResult.rowCount>0)
     {
           let modifiedList = [],i =1; 
@@ -1248,13 +1341,15 @@ router.get('/getMiscellaneousDetailList',verify,(request,response)=>{
         let createdDate = new Date(eachRecord.createddate);
         let strDate = createdDate.toLocaleString();
         obj.sequence = i;
-        obj.name = eachRecord.name;
+        obj.name = '<a href="#" class="miscellaneousTag" id="'+eachRecord.sfid+'" >'+eachRecord.name+'</a>';
         obj.amount = eachRecord.amount__c;
         obj.mode=eachRecord.particulars_mode__c;
         obj.remarks=eachRecord.remarks__c;
         obj.createDdate = strDate;
         obj.date=dated;
-           i= i+1;
+        obj.editAction = '<button href="#" class="btn btn-primary editMiscellanous" id="'+eachRecord.sfid+'" >Edit</button>'
+    
+            i= i+1;
            modifiedList.push(obj);
       })
       response.send(modifiedList); 
@@ -1269,4 +1364,112 @@ router.get('/getMiscellaneousDetailList',verify,(request,response)=>{
   })
 });
 
+router.get('/getMiscellaneousChargeDetail',verify,(request,response)=>{
+  
+  let tourbillId = request.query.tourbillId;
+  console.log('tourbillId  : '+tourbillId);
+  let queryText = 'SELECT misChar.sfid, misChar.Amount__c,misChar.date__c,misChar.Particulars_Mode__c, misChar.name as chargegname,tourBill.sfid  as tourId ,tourBill.name as tourbillname,misChar.createddate '+
+                   'FROM salesforce.Miscellaneous_Expenses__c misChar '+ 
+                   'INNER JOIN salesforce.Tour_Bill_Claim__c tourBill '+
+                   'ON misChar.Tour_Bill_Claim__c =  tourBill.sfid '+
+                   'WHERE  misChar.sfid= $1 ';
+
+  pool
+  .query(queryText,[tourbillId])
+  .then((QueryResult) => {
+        console.log('QueryResult  '+JSON.stringify(QueryResult.rows));
+        if(QueryResult.rowCount > 0)
+        {
+          response.send(QueryResult.rows);
+        }
+        else
+        {
+          response.send({});
+        }
+         
+  })
+  .catch((QueryError) => {
+        console.log('QueryError jsfkjj '+QueryError.stack);
+        response.send({});
+  })
+
+});
+
+
+
+router.post('/updateAirRailBus',verify,(request,response)=>{
+
+  let body = request.body;
+  console.log('body  : '+JSON.stringify(body));
+
+  response.send('Response Not Cleared !');
+})
+router.post('/updateConveyanceCharge',verify,(request,response)=>{
+  let body = request.body;
+  console.log('body  : '+JSON.stringify(body));
+
+  response.send('Response Not Cleared !');
+});
+
+router.post('/updateBoardingCharge',verify,(request,response)=>{
+  let body = request.body;
+  console.log('body  : '+JSON.stringify(body));
+
+  response.send('Response Not Cleared !');
+})
+router.post('/editFoodingForm',verify,(request,response)=>{
+  let body = request.body;
+  console.log('body  : '+JSON.stringify(body));
+  response.send('Response Not Cleared !');
+})
+
+/**  Update */
+
+router.post('/updateMiscellanoousCharge',verify,(request,response)=>{
+  let body = request.body;
+ // let ids=request.params.id;
+ // console.log('ids '+ids);
+
+  console.log('body  : '+JSON.stringify(body));
+  const {miscellanouseName,tourName , particularMode, amount,dt,hide} = request.body;
+  console.log('name  '+miscellanouseName);
+  console.log('TourbillId  '+tourName);
+  console.log('mode  '+particularMode);
+  console.log('amount  '+amount);
+  console.log('date  '+dt);
+  console.log(' Miscellanous IDs '+hide);
+  respond.send('not available');
+  let Updatequerry = 'UPDATE salesforce.Miscellaneous_Expenses__c'+
+                       'particulars_mode__c = \''+particularMode+'\', '+
+                       'amount__c = \''+amount+'\', '+
+                       'date__c = \''+dt+'\', '+
+                       'Tour_Bill_Claim__c=\''+tourName+'\','+
+                       'WHERE sfid = $1';
+                       
+                       console.log('Updatequerry'+Updatequerry);
+                       response.send('okokokokoko');
+/*
+  let updateMiscelaneousQuery = 'UPDATE salesforce.Miscellaneous_Expenses__c '+
+                            'name = \''+taskname+'\', '+
+                            'project_name__c = \''+projectname+'\' , '+
+                            'department__c = \''+department+'\' , '+
+                            'designation__c = \''+designation+'\', '+
+                            'Conveyance_Voucher_Employee_ID__c = \''+employeeId+'\' ,'+
+                            'Conveyance_Employee_Category_Band__c = \''+empCategory+'\' ,'+
+                            'Incurred_By_Heroku_User__c  = \''+incurredBy+'\' '+
+                            'WHERE sfid = $1';
+ console.log('updateMiscelaneousQuery  '+updateMiscelaneousQuery);
+
+  pool
+  .query(Updatequerry,[hide])
+  .then((miscellaneousInsertResult) => {     
+           console.log('miscellaneousInsertResult.rows '+JSON.stringify(Updatequerry.rows));
+           response.send('Success');
+  })
+  .catch((updatetError) => {
+       console.log('updatetError   '+updatetError.stack);
+       response.send('Error');
+  })
+*/
+});
 module.exports = router;
