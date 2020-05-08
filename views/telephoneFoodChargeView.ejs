@@ -114,6 +114,9 @@
                       <label for="total">Total Amount</label>
                       <input type="number" class="form-control" id="total" value=""   name="total" >
                       </div>
+                      <div class="col-md-6">
+                        <input type="hidden" class="form-control" id="hide" value=""   name="hide" >
+                       </div>
                   </div>     
               </div>
               <div class="modal-footer">
@@ -301,10 +304,14 @@
                           console.log('telefoodingChargeDEtail  : '+JSON.stringify(response));
                           let teleFoodingRecord = response[0];
                           document.forms["editFoodingForm"]["foodingName"].value = teleFoodingRecord.chargegname;
-                          document.forms["editFoodingForm"]["tourName"].value = teleFoodingRecord.tourbillname;
+                         // document.forms["editFoodingForm"]["tourName"].value = teleFoodingRecord.tourbillname;
                           document.forms["editFoodingForm"]["laundry"].value = teleFoodingRecord.laundry_expense__c;
                           document.forms["editFoodingForm"]["foodExp"].value = teleFoodingRecord.fooding_expense__c;
                           document.forms["editFoodingForm"]["total"].value = teleFoodingRecord.total_amount__c;
+                          document.forms["editFoodingForm"]["hide"].value = teleFoodingRecord.sfid;
+                          let option1 = new Option(teleFoodingRecord.tourbillname,teleFoodingRecord.tourid,true, true);
+                          console.log('Option1'+option1);
+                          document.forms["editFoodingForm"]["tourName"].appendChild(option1);
                         })
                         .fail((jqXHR, status, error) => {
                           console.log('jqXHR   '+JSON.stringify(jqXHR));

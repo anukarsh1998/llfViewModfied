@@ -95,9 +95,13 @@
               <div class="form-group">
                   <div class="row">            
                     <div class="col-md-6">
-                    <label for="place">Place</label>
-                      <input type="text" class="form-control" id="place" value=""   name="place" >
-                    </div>
+                      <label for="place">Place</label>
+                        <input type="text" class="form-control" id="place" value=""   name="place" >
+                      </div>
+                      <div class="col-md-6">
+                        <label for="dateOfConvey">Date</label>
+                          <input type="text" class="form-control" id="dateOfConvey" value=""   name="dateOfConvey" >
+                        </div>
                   </div>
               </div>
               
@@ -107,6 +111,9 @@
                       <label for="amount">Amount</label>
                       <input type="number" class="form-control" id="amount" value=""   name="amount" >
                       </div>
+                      <div class="col-md-6">
+                        <input type="hidden" class="form-control" id="hide" value=""   name="hide" >
+                       </div>
                   </div>     
               </div>
               <div class="modal-footer">
@@ -299,13 +306,19 @@
                         .done((response)=>{
                           console.log('conveyanceChargeDEtail  : '+JSON.stringify(response));
                           let conveyanceRecord = response[0];
-                         let strdeparture = formatDate(new Date(conveyanceRecord.departure_date__c));
-                          let strarrival = formatDate(new Date(conveyanceRecord.arrival_date__c));
-                          console.log('strdeparture '+strdeparture);
+                         let strdated = formatDate(new Date(conveyanceRecord.date__c));
+                         // let strarrival = formatDate(new Date(conveyanceRecord.arrival_date__c));
+                          console.log('strdeparture '+strdated);
                           document.forms["editConveyanceForm"]["conveyanceName"].value = conveyanceRecord.conveyname;
                           document.forms["editConveyanceForm"]["tourName"].value = conveyanceRecord.tourbillname;
                           document.forms["editConveyanceForm"]["place"].value = conveyanceRecord.place__c;
+                          document.forms["editConveyanceForm"]["dateOfConvey"].value = strdated;
                           document.forms["editConveyanceForm"]["amount"].value = conveyanceRecord.amount__c;
+                          document.forms["editConveyanceForm"]["hide"].value = conveyanceRecord.sfid;
+                          let option1 = new Option(conveyanceRecord.tourbillname,conveyanceRecord.tourid,true, true);
+                          console.log('Option1'+option1);
+                          document.forms["editConveyanceForm"]["tourName"].appendChild(option1);
+
                         })
                         .fail((jqXHR, status, error) => {
                           console.log('jqXHR   '+JSON.stringify(jqXHR));

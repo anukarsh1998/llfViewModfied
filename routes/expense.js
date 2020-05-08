@@ -1034,7 +1034,7 @@ router.get('/getAirbusDetalList',verify,(request,response)=>{
 router.get('/getAirRailBus',verify,(request,response)=>{
   let tourbillId = request.query.tourbillId;
   console.log('tourbillId  : '+tourbillId);
-  let queryText = 'SELECT airRail.sfid, airRail.Departure_Station__c,airRail.arrival_station__c,airRail.Departure_Date__c,airRail.Arrival_Date__c, airRail.amount__c, airRail.name as airbusrailname ,tourBill.name as tourbillname,airRail.createddate '+
+  let queryText = 'SELECT airRail.sfid, airRail.Departure_Station__c,airRail.arrival_station__c,airRail.Departure_Date__c,airRail.Arrival_Date__c, airRail.amount__c, airRail.name as airbusrailname ,tourBill.sfid  as tourId ,tourBill.name as tourbillname,airRail.createddate '+
                    'FROM salesforce.Air_Rail_Bus_Fare__c airRail '+ 
                    'INNER JOIN salesforce.Tour_Bill_Claim__c tourBill '+
                    'ON airRail.Tour_Bill_Claim__c =  tourBill.sfid '+
@@ -1118,7 +1118,7 @@ router.get('/getConveyanceDetail',verify,(request,response)=>{
 
   let tourbillId = request.query.tourbillId;
   console.log('tourbillId  : '+tourbillId);
-  let queryText = 'SELECT conveyancename.sfid, conveyancename.place__c, conveyancename.amount__c,conveyancename.date__c, conveyancename.name as conveyname ,tourBill.name as tourbillname,conveyancename.createddate '+
+  let queryText = 'SELECT conveyancename.sfid, conveyancename.place__c, conveyancename.amount__c,conveyancename.date__c, conveyancename.name as conveyname ,tourBill.sfid  as tourId ,tourBill.name as tourbillname,conveyancename.createddate '+
                    'FROM salesforce.Conveyance_Charges__c conveyancename '+ 
                    'INNER JOIN salesforce.Tour_Bill_Claim__c tourBill '+
                    'ON conveyancename.Tour_Bill_Claim__c =  tourBill.sfid '+
@@ -1207,7 +1207,7 @@ router.get('/getBoardingLodgingDetalList',verify,(request,response)=>{
 router.get('/getBoardingDetail',verify,(request,response)=>{
   let tourbillId = request.query.tourbillId;
   console.log('tourbillId  : '+tourbillId);
-  let queryText = 'SELECT boradLoad.sfid,boradLoad.No_of_Days__c,boradLoad.Stay_Option__c,boradLoad.Place_Journey__c, boradLoad.total_amount__c, boradLoad.name as boardingname ,tourBill.name as tourbillname,boradLoad.createddate '+
+  let queryText = 'SELECT boradLoad.sfid,boradLoad.No_of_Days__c,boradLoad.Stay_Option__c,boradLoad.Place_Journey__c, boradLoad.total_amount__c, boradLoad.name as boardingname ,tourBill.sfid  as tourId ,tourBill.name as tourbillname,boradLoad.createddate '+
                    'FROM salesforce.Boarding_Lodging__c boradLoad '+ 
                    'INNER JOIN salesforce.Tour_Bill_Claim__c tourBill '+
                    'ON boradLoad.Tour_Bill_Claim__c =  tourBill.sfid '+
@@ -1285,7 +1285,7 @@ router.get('/gettelephoneFoodChargeDetalList',verify,(request,response)=>{
 router.get('/gettelephoneFoodChargeDetail',verify,(request,response)=>{
   let tourbillId = request.query.tourbillId;
   console.log('tourbillId  : '+tourbillId);
-  let queryText = 'SELECT charge.sfid, charge.total_amount__c,charge.Fooding_Expense__c,charge.Laundry_Expense__c, charge.name as chargegname ,tourBill.name as tourbillname,charge.createddate '+
+  let queryText = 'SELECT charge.sfid, charge.total_amount__c,charge.Fooding_Expense__c,charge.Laundry_Expense__c, charge.name as chargegname ,tourBill.sfid  as tourId ,tourBill.name as tourbillname,charge.createddate '+
                    'FROM salesforce.Telephone_Fooding_Laundry_Expenses__c charge '+ 
                    'INNER JOIN salesforce.Tour_Bill_Claim__c tourBill '+
                    'ON charge.Tour_Bill_Claim__c =  tourBill.sfid '+
@@ -1395,35 +1395,130 @@ router.get('/getMiscellaneousChargeDetail',verify,(request,response)=>{
 
 });
 
-
+/**  Update Edit  TourBill Charges Query */
 
 router.post('/updateAirRailBus',verify,(request,response)=>{
 
   let body = request.body;
   console.log('body  : '+JSON.stringify(body));
-
-  response.send('Response Not Cleared !');
+  const {airBusName,tourName , departureStation, departureDate,arrivalStation,arrivalDate,amount,hide} = request.body;
+  console.log('name  '+airBusName);
+  console.log('TourbillId  '+tourName);
+  console.log('Amount  '+amount);
+  console.log('departureStation  '+departureStation);
+  console.log('departureDate '+departureDate);
+  console.log('arrivalDate '+arrivalDate);
+  console.log('arrivalStation '+arrivalStation);
+  console.log(' Coveyance ID '+hide);
+  let updateQuerry = 'UPDATE salesforce.Air_Rail_Bus_Fare__c SET '+
+                       'arrival_station__c = \''+arrivalStation+'\', '+
+                       'departure_station__c = \''+departureStation+'\', '+
+                       'departure_date__c = \''+departureDate+'\', '+
+                       'arrival_date__c = \''+arrivalDate+'\' '+
+                      // 'total_amount__c = \''+amount+'\' '+
+                       'WHERE sfid = $1';
+console.log('updateQuerry  '+updateQuerry);
+  pool
+  .query(updateQuerry,[hide])
+  .then((AirBusRailInsertResult) => {     
+           console.log('AirBusRailInsertResult '+JSON.stringify(AirBusRailInsertResult));
+           response.send('Success');
+  })
+  .catch((updatetError) => {
+       console.log('updatetError   '+updatetError.stack);
+       response.send('Error');
+  })
 })
+
+
 router.post('/updateConveyanceCharge',verify,(request,response)=>{
   let body = request.body;
   console.log('body  : '+JSON.stringify(body));
-
-  response.send('Response Not Cleared !');
+  const {conveyanceName,tourName , place, dateOfConvey,amount,hide} = request.body;
+  console.log('name  '+conveyanceName);
+  console.log('TourbillId  '+tourName);
+  console.log('Amount  '+amount);
+  console.log('place  '+place);
+  console.log('dateOfConvey '+dateOfConvey);
+  console.log(' Coveyance ID '+hide);
+  let updateQuerry = 'UPDATE salesforce.Conveyance_Charges__c SET '+
+                       'place__c = \''+place+'\', '+
+                       'date__c = \''+dateOfConvey+'\', '+
+                       'amount__c = \''+amount+'\' '+
+                       'WHERE sfid = $1';
+console.log('updateQuerry  '+updateQuerry);
+  pool
+  .query(updateQuerry,[hide])
+  .then((BoardingLodgingInsertResult) => {     
+           console.log('BoardingLodgingInsertResult '+JSON.stringify(BoardingLodgingInsertResult));
+           response.send('Success');
+  })
+  .catch((updatetError) => {
+       console.log('updatetError   '+updatetError.stack);
+       response.send('Error');
+  })
 });
+
 
 router.post('/updateBoardingCharge',verify,(request,response)=>{
   let body = request.body;
   console.log('body  : '+JSON.stringify(body));
-
-  response.send('Response Not Cleared !');
+  const {boardingLoadingName,tourName , placeofJorney, stayDay,stayOption,amount,hide} = request.body;
+  console.log('name  '+boardingLoadingName);
+  console.log('TourbillId  '+tourName);
+  console.log('Amount  '+amount);
+  console.log('placeofJorney  '+placeofJorney);
+  console.log('Stay Option'  +stayOption);
+  console.log('stayDay  '+stayDay);
+  console.log(' LodgingBoarding ID '+hide);
+  let updateQuerry = 'UPDATE salesforce.Boarding_Lodging__c SET '+
+                       'no_of_days__c = \''+stayDay+'\', '+
+                       'place_journey__c = \''+placeofJorney+'\', '+
+                       'stay_option__c = \''+stayOption+'\', '+
+                       'amount__c = \''+amount+'\' '+
+                       'WHERE sfid = $1';
+console.log('updateQuerry  '+updateQuerry);
+  pool
+  .query(updateQuerry,[hide])
+  .then((BoardingLodgingInsertResult) => {     
+           console.log('BoardingLodgingInsertResult '+JSON.stringify(BoardingLodgingInsertResult));
+           response.send('Success');
+  })
+  .catch((updatetError) => {
+       console.log('updatetError   '+updatetError.stack);
+       response.send('Error');
+  })
 })
-router.post('/editFoodingForm',verify,(request,response)=>{
+
+
+router.post('/updateTeleFoodingCharge',verify,(request,response)=>{
   let body = request.body;
   console.log('body  : '+JSON.stringify(body));
-  response.send('Response Not Cleared !');
-})
+  const {foodingName,tourName , laundry, foodExp,total,hide} = request.body;
+  console.log('name  '+foodingName);
+  console.log('TourbillId  '+tourName);
+  console.log('laundry Amount  '+laundry);
+  console.log('Fooding amount  '+foodExp);
+  console.log('total amount  '+total);
+  console.log(' TelephoneFoodCharge IDs '+hide);
+  let updateQuerry = 'UPDATE salesforce.Telephone_Fooding_Laundry_Expenses__c SET '+
+                       'fooding_expense__c = \''+foodExp+'\', '+
+                      // 'total_amount__c = \''+total+'\', '+
+                       'Laundry_Expense__c = \''+laundry+'\' '+
+                       'WHERE sfid = $1';
+console.log('updateQuerry  '+updateQuerry);
+  pool
+  .query(updateQuerry,[hide])
+  .then((TelephoneInsertResult) => {     
+           console.log('TelephoneInsertResult '+JSON.stringify(TelephoneInsertResult));
+           response.send('Success');
+  })
+  .catch((updatetError) => {
+       console.log('updatetError   '+updatetError.stack);
+       response.send('Error');
+  })
+});
 
-/**  Update */
 
 router.post('/updateMiscellanoousCharge',verify,(request,response)=>{
   let body = request.body;
@@ -1438,38 +1533,21 @@ router.post('/updateMiscellanoousCharge',verify,(request,response)=>{
   console.log('amount  '+amount);
   console.log('date  '+dt);
   console.log(' Miscellanous IDs '+hide);
-  respond.send('not available');
-  let Updatequerry = 'UPDATE salesforce.Miscellaneous_Expenses__c'+
+  let updateQuerry = 'UPDATE salesforce.Miscellaneous_Expenses__c SET '+
                        'particulars_mode__c = \''+particularMode+'\', '+
                        'amount__c = \''+amount+'\', '+
-                       'date__c = \''+dt+'\', '+
-                       'Tour_Bill_Claim__c=\''+tourName+'\','+
+                       'date__c = \''+dt+'\' '+
                        'WHERE sfid = $1';
-                       
-                       console.log('Updatequerry'+Updatequerry);
-                       response.send('okokokokoko');
-/*
-  let updateMiscelaneousQuery = 'UPDATE salesforce.Miscellaneous_Expenses__c '+
-                            'name = \''+taskname+'\', '+
-                            'project_name__c = \''+projectname+'\' , '+
-                            'department__c = \''+department+'\' , '+
-                            'designation__c = \''+designation+'\', '+
-                            'Conveyance_Voucher_Employee_ID__c = \''+employeeId+'\' ,'+
-                            'Conveyance_Employee_Category_Band__c = \''+empCategory+'\' ,'+
-                            'Incurred_By_Heroku_User__c  = \''+incurredBy+'\' '+
-                            'WHERE sfid = $1';
- console.log('updateMiscelaneousQuery  '+updateMiscelaneousQuery);
-
+console.log('updateQuerry  '+updateQuerry);
   pool
-  .query(Updatequerry,[hide])
+  .query(updateQuerry,[hide])
   .then((miscellaneousInsertResult) => {     
-           console.log('miscellaneousInsertResult.rows '+JSON.stringify(Updatequerry.rows));
+           console.log('miscellaneousInsertResult '+JSON.stringify(miscellaneousInsertResult));
            response.send('Success');
   })
   .catch((updatetError) => {
        console.log('updatetError   '+updatetError.stack);
        response.send('Error');
   })
-*/
 });
 module.exports = router;

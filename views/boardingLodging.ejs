@@ -109,17 +109,20 @@
                   <div class="row">
                     <div class="col-md-6">
                         <label for="amount">Amount</label>
-                        <input type="number" class="form-control" id="amount" value=""   name="amount" >
+                        <input type="number" disabled class="form-control" id="amount" value=""   name="amount" >
                         </div>
                         
                         <div class="col-md-6">
                             <label for="stayDay">Numbey Of Day Stay</label>
                             <input type="number" class="form-control" id="stayDay" value=""   name="stayDay" >
                             </div>
+                            <div class="col-md-6">
+                              <input type="hidden" class="form-control" id="hide" value=""   name="hide" >
+                             </div>
                   </div>     
               </div>
               <div class="modal-footer">
-                  <button type="submit" class="btn btn-primary" id="editAirBusButton" data-dismiss="modal">Save</button>
+                  <button type="submit" class="btn btn-primary" id="editAirBusChargeButton" data-dismiss="modal">Save</button>
                   <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
               </div>
             </form>
@@ -318,8 +321,11 @@
                           document.forms["editBoardingForm"]["placeofJorney"].value = boardingRecord.place_journey__c;
                           document.forms["editBoardingForm"]["stayDay"].value = boardingRecord.no_of_days__c;
                           document.forms["editBoardingForm"]["stayOption"].value = boardingRecord.stay_option__c;
-                                                    
                           document.forms["editBoardingForm"]["amount"].value = boardingRecord.amount__c;
+                          document.forms["editBoardingForm"]["hide"].value = boardingRecord.sfid;
+                          let option1 = new Option(boardingRecord.tourbillname,boardingRecord.tourid,true, true);
+                          console.log('Option1'+option1);
+                          document.forms["editBoardingForm"]["tourName"].appendChild(option1);
                         })
                         .fail((jqXHR, status, error) => {
                           console.log('jqXHR   '+JSON.stringify(jqXHR));
@@ -327,13 +333,13 @@
                       })
     
         })
-        $('#editAirBusButton').on('click',function(event){
+        $('#editAirBusChargeButton').on('click',function(event){
 
           event.preventDefault();
                     event.stopPropagation();
                     event.stopImmediatePropagation();
                     alert('Save Button Clicked !');
-                    var $inputs = $('#editAirBusButton :input');
+                    var $inputs = $('#editBoardingForm :input');
 
                     // not sure if you wanted this, but I thought I'd add it.
                     // get an associative array of just the values.

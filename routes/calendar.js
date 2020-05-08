@@ -3,8 +3,6 @@ var router = express.Router();
 const pool = require('../db/dbConfig');
 const verify = require('../config/verifyToken');
 const jwt = require('jsonwebtoken');
-
-
 router.get('/timesheet',verify,(request, response) => {
 
   console.log('Expense request.user '+JSON.stringify(request.user));
@@ -507,6 +505,7 @@ router.post('/fillactuals',(request, response) => {
 
  });
  
+
 
 module.exports = router;
 

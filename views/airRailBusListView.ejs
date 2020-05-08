@@ -149,6 +149,9 @@
                       <label for="amount">Amount</label>
                       <input type="number" class="form-control" id="amount" value=""   name="amount" >
                       </div>
+                      <div class="col-md-6">
+                        <input type="hidden" class="form-control" id="hide" value=""   name="hide" >
+                        </div>
                   </div>     
               </div>
               <div class="modal-footer">
@@ -372,6 +375,11 @@
                           document.forms["editAirBusForm"]["arrivalStation"].value = airBusRailRecord.arrival_station__c;
                           document.forms["editAirBusForm"]["arrivalDate"].value = strarrival;
                           document.forms["editAirBusForm"]["amount"].value = airBusRailRecord.amount__c;
+                          
+                          document.forms["editAirBusForm"]["hide"].value = airBusRailRecord.sfid;
+                          let option1 = new Option(airBusRailRecord.tourbillname,airBusRailRecord.tourid,true, true);
+                          console.log('Option1'+option1);
+                          document.forms["editAirBusForm"]["tourName"].appendChild(option1);
 
                         })
                         .fail((jqXHR, status, error) => {

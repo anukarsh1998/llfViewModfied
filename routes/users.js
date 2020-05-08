@@ -501,5 +501,195 @@ router.get('/logout', (request, response) => {
   response.redirect('/users/login');
 });
 
+router.get('/taskist',verify,(request,response)=>{
+  let objUser = request.user;
+  console.log('objUser  : '+JSON.stringify(objUser));
+  response.render('taskViewList',{objUser});
+})
 
+router.get('/getTasklist',verify,(request,response)=>{
+  let objUser=request.user;
+  console.log('objUser.sfid '+objUser.sfid);
+  let queryText = 'SELECT tsk.sfid as sfids, tsk.Assigned_Manager__c as assManager,tsk.end_time__c,tsk.Task_Type__c,tsk.Planned_Hours__c,tsk.Start_Time__c,tsk.name as tskname,tsk.createddate '+
+                   'FROM salesforce.Milestone1_Task__c tsk '+ 
+                   'WHERE  tsk.Assigned_Manager__c= $1 '+
+                   'AND sfid IS NOT NULL ';
+ console.log('queryText  taskkkkkkkkkkkkkkkkkkk',queryText);
+  pool
+   .query(queryText,[objUser.sfid])
+  .then((taskQueryResult)=>{
+    console.log('taskQueryResult '+JSON.stringify(taskQueryResult.rows));
+    if(taskQueryResult.rowCount > 0)
+    {
+        let modifiedTaskList = [],i =1;
+        taskQueryResult.rows.forEach((eachRecord) => {
+          let obj = {};
+          let createdDate = new Date(eachRecord.createddate);
+          let strDate = createdDate.toLocaleString();
+          obj.sequence = i;
+          obj.name = '<a href="#" class="taskreferenceTag" id="'+eachRecord.sfids+'" >'+eachRecord.tskname+'</a>';
+          obj.assigned = eachRecord.assmanager;
+          obj.hrs=eachRecord.planned_hours__c;
+          obj.startTime=eachRecord.start_time__c;
+          obj.endtime=eachRecord.end_time__c;
+          obj.taskType=eachRecord.task_type__c;
+          obj.createDdate = strDate;
+          obj.editAction = '<button href="#" class="btn btn-primary editTask" id="'+eachRecord.sfids+'" >Edit</button>'
+          i= i+1;
+          modifiedTaskList.push(obj);
+        })
+        response.send(modifiedTaskList);
+    }
+    else
+    {
+        response.send([]);
+    }
+
+  })
+  .catch((QueryError) => {
+    console.log('QueryError  '+QueryError.stack);
+  }) 
+})
+router.get('/fetchTaskDetail',verify,(request,response)=>{
+  let tskId=request.query.taskId;
+  console.log('task ID '+tskId);
+  pool
+  .query('select sfid,name ,Assigned_Manager__c,end_time__c,Task_Type__c,Planned_Hours__c,Start_Time__c FROM salesforce.Milestone1_Task__c where sfid=$1 ',[tskId])
+  .then((querryResult)=>{
+    console.log('QUERRY rESULT'+ JSON.stringify(querryResult.rows));
+    response.send(querryResult.rows);
+  })
+  .catch((querryError)=>{
+    console.log('querryError '+querryError);
+    response.send(querryError.stack)
+})
+})
+
+router.post('/updateTask',verify,(request,response)=>{
+  let body=request.body;
+  console.log('Body '+ JSON.stringify(body));
+  const {start,endTime , taskType, hrs, hide} = request.body;
+  console.log('start '+ start);
+  console.log('endTime '+ endTime);
+  console.log('taskType '+ taskType);
+  console.log('hr '+ hrs);
+  console.log('hide '+ hide);
+  let updateQuery= 'UPDATE salesforce.Milestone1_Task__c SET '+
+                    'end_time__c = \''+endTime+'\', '+
+                    'start_time__c = \''+start+'\', '+
+                    'task_type__c = \''+taskType+'\' '+
+                       'WHERE sfid = $1';
+  console.log('updateQuerryyyyy '+updateQuery);
+  pool
+  .query(updateQuery,[hide])
+  .then((queryResult)=>{
+    console.log('queryResult '+JSON.stringify(queryResult.rows));
+    response.send('successsss')
+    .catch((querryError)=>{
+      console.log('querryError'+querryError.stack);
+      response.send(querryError);
+    })
+  })
+
+  
+})
+
+
+router.get('/getTimesheestList',verify,(request,response)=>{
+  let objUser = request.user;
+  console.log('objUser  : '+JSON.stringify(objUser));
+  response.render('getTimesheetViewList',{objUser});
+})
+
+router.get('/getTimesheetlist',verify,(request,response)=>{
+  let objUser=request.user;
+  console.log('objUser.sfid '+objUser.sfid);
+  let queryText = 'SELECT sfid, Date__c,end_time__c,Hours__c,	Start_Time__c,name,Incurred_By__c,representative__c,createddate '+
+                   'FROM salesforce.Milestone1_Time__c  '+ 
+                   'WHERE  representative__c= $1 '+
+                   'AND sfid IS NOT NULL ' ;
+ console.log('queryText timesheetList',queryText);
+  pool
+  .query(queryText,[objUser.sfid])
+  .then((timesheetQueryResult)=>{
+    console.log('timesheetQueryResult '+JSON.stringify(timesheetQueryResult));
+    if(timesheetQueryResult.rowCount > 0 && timesheetQueryResult.rows)
+    {
+        let modifiedList = [],i =1;
+        timesheetQueryResult.rows.forEach((eachRecord) => {
+          
+          let obj = {};
+          let createdDate = new Date(eachRecord.createddate);
+          let strDate = createdDate.toLocaleString();
+          let strDated = new Date(eachRecord.createddate);
+          let strDated1 = strDated.toLocaleString();
+          obj.sequence = i;
+          obj.name = '<a href="#" class="taskreferenceTag" id="'+eachRecord.sfid+'" >'+eachRecord.name+'</a>';
+          obj.hours=eachRecord.hours__c;
+          obj.startTime=eachRecord.start_time__c;
+          obj.endtime=eachRecord.end_time__c;
+          obj.date=strDated1;
+          obj.createDdate = strDate;
+          obj.editAction = '<button href="#" class="btn btn-primary editTimesheet" id="'+eachRecord.sfid+'" >Edit</button>'
+          i= i+1;
+          modifiedList.push(obj);
+          
+        })
+        response.send(modifiedList);
+    }
+    else
+    {
+        response.send([]);
+    }
+
+  })
+  .catch((QueryError) => {
+    console.log('QueryError  '+QueryError.stack);
+    response.send(querryError);
+  }) 
+})
+  
+router.get('/fetchtimesheetkDetail',verify,(request,response)=>{
+  let timesheetId= request.query.timesheetId;
+  console.log('timesheet ID '+timesheetId);
+ /*  let queryText = ;
+console.log('queryText '+queryText); */
+pool
+.query('SELECT sfid,date__c,end_time__c,Hours__c,Start_Time__c,name,Incurred_By__c,representative__c,createddate FROM salesforce.Milestone1_Time__c WHERE sfid= $1 ',[timesheetId])
+.then((querryResult)=>{
+  console.log('queryrResult fetchqueryrResult fetchqueryrResult fetchqueryrResult fetch'+JSON.stringify(querryResult.rows));
+  response.send(querryResult.rows);
+})
+.catch((QueryError)=>{
+  console.log('querryError '+querryError.stack);
+  response.send(querryError);
+})
+});
+
+router.post('/updateTimesheet',verify,(request,response)=>{
+  let body=request.body;
+  console.log('Body '+ JSON.stringify(body));
+  const {start,endTime , dt, hr, hide} = request.body;
+  console.log('start '+ start);
+  console.log('endTime '+ endTime);
+  console.log('dt '+ dt);
+  console.log('hr '+ hr);
+  console.log('hide '+ hide);
+  let updateQuery= 'UPDATE salesforce.Milestone1_Time__c SET '+
+                    'end_time__c = \''+endTime+'\', '+
+                    'Start_Time__c = \''+start+'\', '+
+                       'date__c = \''+dt+'\' '+
+                       'WHERE sfid = $1';
+console.log('update Querry'+updateQuery);
+pool
+.query(updateQuery,[hide])
+.then((querryResult)=>{
+  console.log('querryResult '+JSON.stringify(querryResult));
+  response.send('Success');
+})
+.catch((querryError)=>{
+  console.log('querryError'+querryError.stack);
+  response.send(querryError);
+})
+});
 module.exports = router;

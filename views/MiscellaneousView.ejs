@@ -39,7 +39,7 @@
         <div class="modal-dialog" role="document">
           <div class="modal-content">
             <div class="modal-header">
-              <h5 class="modal-title">Approval Comment</h5>
+              <h5 class="modal-title">Miscellanous Detail Form</h5>
               <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                 <span aria-hidden="true">&times;</span>
               </button>
@@ -68,7 +68,7 @@
     <div class="modal-dialog" role="document">
       <div class="modal-content">
         <div class="modal-header">
-          <h5 class="modal-title">Miscellanous  Charge Form</h5>
+          <h5 class="modal-title">Miscellanous Charge Edit Form</h5>
           <button type="button" class="close" data-dismiss="modal" aria-label="Close">
             <span aria-hidden="true">&times;</span>
           </button>
@@ -86,12 +86,6 @@
                     <div class="col-md-6">
                     <label for="tourName">TourBill Name</label>
                       <select id="tourName" class="custom-select custom-select-sm form-control" name="tourName">
-                       <option value="a1U0p0000005CRNEA2" selected>Science Exihibtion Tour</option> 
-                        <option value="New Tour Goa">goa Tour</option>
-                        <option value="llf Expense">llf Expense</option>
-                        <option value="Tour Expense">Tour Expense</option>
-                        <option value="New Tour 7">New Tour 7r</option>
-                                                
                         </option>
                       </select>
                     </div>
@@ -119,7 +113,6 @@
                       <input type="text" class="form-control" id="particularMode" value=""   name="particularMode" >
                     </div> 
                     <div class="col-md-6">
-                      <label for="hide">Hideen Id</label>
                        <input type="hidden" class="form-control" id="hide" value=""   name="hide" >
                       </div>
             </div>
@@ -325,14 +318,17 @@
                           console.log('MiscellaneousChargeDEtail  : '+JSON.stringify(response));
                           let miscellaneousRecord = response[0];
                           let strdeparture = formatDate(new Date(miscellaneousRecord.date__c));
-                         // let option1 = new Option("Anukasrh","Anu",false, false);
                           document.forms["editMiscellanousForm"]["miscellanouseName"].value = miscellaneousRecord.chargegname;
-                          document.forms["editMiscellanousForm"]["tourName"].value = miscellaneousRecord.tourid;
-                        //  document.forms["editMiscellanousForm"]["tourName"].appendappendChild(option1);
+                      //    document.forms["editMiscellanousForm"]["tourName"].value = miscellaneousRecord.tourid;
+                        // document.forms["editMiscellanousForm"]["tourName"].appendappendChild(option1);
                           document.forms["editMiscellanousForm"]["particularMode"].value = miscellaneousRecord.particulars_mode__c;
                           document.forms["editMiscellanousForm"]["amount"].value = miscellaneousRecord.amount__c;
                           document.forms["editMiscellanousForm"]["dt"].value = strdeparture;
                           document.forms["editMiscellanousForm"]["hide"].value = miscellaneousRecord.sfid;
+                          let option1 = new Option(miscellaneousRecord.tourbillname,miscellaneousRecord.tourid,true, true);
+                          console.log('Option1'+option1);
+                          document.forms["editMiscellanousForm"]["tourName"].appendChild(option1);
+                         
                         })
                         .fail((jqXHR, status, error) => {
                           console.log('jqXHR   '+JSON.stringify(jqXHR));
@@ -364,7 +360,7 @@
                         dataType : 'json'
                     })
                     .done((response) => {
-                          console.log('resonse   :'+response);
+                          console.log('response   :'+response);
                     })
                     .fail((jqXHR, status, error) => {
                           console.log('jqXHR  '+JSON.stringify(jqXHR));
