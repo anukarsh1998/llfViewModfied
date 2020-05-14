@@ -1,12 +1,14 @@
+"use strict";
 var express = require('express');
+const nodemailer = require("nodemailer");
 //var router = express.Router();
 const Router = require('express-promise-router');
 const router = new Router()
 const pool = require('../db/dbConfig');
 const verify = require('../config/verifyToken');
 const jwt = require('jsonwebtoken');
-
-
+const joi = require('@hapi/joi');
+// const {check, validationResult }=require('express-validator');
 router.post('/savePldForm',(request, response) => {
 
   console.log('request.body  : '+JSON.stringify(request.body));
@@ -692,4 +694,253 @@ pool
   response.send(querryError);
 })
 });
-module.exports = router;
+/*
+Forget Password
+*/
+router.get('/forgotpassword',(req,res)=>{
+  console.log('rendering'+JSON.req);
+  res.render('forgetPassword');
+})
+
+
+router.post('/salesforceEmailVeerification',(request,response)=>{
+  let emailEnter= request.body;
+  const {emailPass }= request.body;
+  console.log('emailAddress' +emailPass);
+  console.log('Body'+JSON.stringify(emailEnter));
+  let queryContact = 'SELECT sfid,email,name FROM salesforce.contact where email=$1' ;
+  console.log('querry Contact '+queryContact);
+  pool
+  .query(queryContact,[emailPass])
+  .then((querryResult)=>{
+        console.log('queryResult: '+JSON.stringify(querryResult.rows));
+        if(querryResult.rowCount==1)
+        {
+          response.send(querryResult.rows);
+        }
+        else
+        {
+          response.send('[]');
+        }
+  })
+  .catch((QueryError)=>{
+    console.log('Erros '+ QueryError.stack);
+    response.send('QueryError');
+  })
+})
+
+router.post('/sendEMail',(request,response)=>{
+ let bodysent= request.body;
+  const {email,sfid ,name} = request.body;
+  console.log('emaoBidy' +email);
+  console.log('sfid' +sfid);
+  console.log('name' +name);
+ /*  nodemailer.createTestAccount((err, account) => {
+    if (err) {
+        console.error('Failed to create a testing account. ' + err.message);
+        return process.exit(1);
+    }  */
+    const transporter = nodemailer.createTransport({
+     service:'gmail',
+      auth: {
+          user:'agupta3@kloudrac.com',
+          pass:'Vishw@1234'
+      }
+  })
+  let message = {
+    from: 'agupta3@kloudrac.com',
+    to:email,
+    subject: 'Heroku Password Forget',
+    text: 'Plz Click the below link to generate your password',
+    html: '<p><a href="http://localhost:7500/users/resetPassword/'+sfid +'">click to resest your password</a></p>' 
+  }
+
+  transporter.sendMail(message, (err, info) => {
+    if (err) {
+        console.log('Error occurred. ' + err.message);
+        return process.exit(1);
+    }
+    console.log('Message sent: %s', info.messageId);
+    // Preview only available when sending through an Ethereal account
+  //  console.log('Preview URL: %s', nodemailer.getTestMessageUrl(info));
+    response.send('Email Sent');
+  })
+})
+router.get('/resetPassword/:userId',(request,response)=>{
+  let userId = request.params.userId;
+  console.log('userId  : '+userId);
+  response.render('resetPassword',{userId});
+})
+router.post('/updatePass',(request,response)=>{
+  console.log('BODy'+JSON.stringify(request.body));
+  const { pass ,pass2, user}=request.body;
+  let updateQuerryPass='UPDATE salesforce.contact SET '+
+                 'password__c = \''+pass+'\', '+
+                  'password2__c=\''+pass2+'\' '+
+                  'WHERE sfid = $1';
+                  console.log('update query'+updateQuerryPass);
+  pool
+  .query(updateQuerryPass,[user])
+  .then((querryResult)=>{
+    console.log('querryResult'+JSON.stringify(querryResult));
+    response.send('DOne');
+  })
+  .catch((queryyError)=>{
+    console.log('queryyError'+queryyError.stack);
+    response.send('queryyError');
+   })
+})
+
+router.get('/editProfile',verify,(request,response)=>{
+  let objUser=request.user;
+  let userId=objUser.sfid;
+  console.log('Sfidddd :'+JSON.stringify(objUser));
+  let queryContact = 'SELECT sfid,email,  postal_code__c,address__c,name FROM salesforce.contact where sfid=$1' ;
+  pool
+  .query(queryContact,[userId])
+  .then((queryResult)=>{
+    let userdetail=queryResult.rows[0];
+    console.log('userdeat '+JSON.stringify(userdetail));
+ /*    console.log('queryResult'+JSON.stringify(queryResult.rows));
+    let obj = queryResult.rows;
+    console.log('check'+JSON.stringify(obj[0]));
+    let user =JSON.stringify(obj[0]); 
+    console.log('user '+user);
+    response.render('editProfile',{userI}); */
+    response.render('editProfile',{userdetail});
+  })
+  .catch((QueryError)=>{
+    console.log('QueryError'+QueryError.stack);
+    response.send(QueryError);
+  })
+})
+router.post('/updateProfile',(request,response)=>{
+  
+  /*  const errors = validationResult(req);
+   if(!errors.isEmpty()){
+     return res.status(422).JSON({errors:errors.array()})
+   } */
+ // request.checkQuery('postal','"Postal Code should not  be empty ').notEmpty().isInt();
+  let bdy= request.body;
+   const schema = joi.object({
+    postal: joi.number().max(999999).min(100000),
+   /*
+    nam:joi.string().min(4).max(20)
+    phn:joi.string().required(),
+    add:joi.string(),
+    uid:joi.string(), */
+  }) 
+ // const scema = joi.number().max(5);
+  let result= schema.validate({postal:bdy.postal,nam:bdy.nam});
+  console.log('resutk '+JSON.stringify(result));
+  if(result.error){
+    response.status(400).send(result.error.details[0].message)
+    return;
+    } 
+  console.log('body : '+ JSON.stringify(bdy));
+  const {nam , phn, postal,add,uid }=request.body;
+  console.log('name '+nam);
+  console.log('phn '+phn);
+  console.log('napostalme '+postal);
+  console.log('add '+add);
+  console.log('uid '+uid);
+  let qry ='UPDATE salesforce.contact SET '+
+            'postal_code__c=\''+postal+'\', '+
+            'address__c=\''+add+'\' '+
+             'WHERE sfid = $1';
+             console.log('qry '+qry);
+  pool
+  .query(qry ,[uid])
+  .then((querryResult)=>{
+    console.log('querryResult'+JSON.stringify(querryResult));
+    response.send(querryResult);
+  })
+  .catch((qurryError)=>{
+    console.log('qrryError ' +qurryError.stack);
+    response.send(qurryError);
+  })
+
+});
+/* 
+    TAsk Activity Code 
+ */
+router.get('/taskDetail',verify,(req,res)=>{
+  console.log('calling Activity Code Page')
+  res.render('taskCode');
+})
+router.get('/fetchTASKCODE',verify,(request,response)=>{
+
+  pool.query('select sfid ,name from salesforce.Milestone1_Milestone__c where Project__c =$1 and sfid!=$2',['a030p0000018ScOAAU','a020p0000035q9lAAA'])
+  .then((querryRes)=>{
+    console.log('querryRes'+JSON.stringify(querryRes.rows));
+    var sId=[];
+    querryRes.rows.forEach((eachRecord)=>{
+     // console.log(JSON.stringify(eachRecord.sfid));
+      sId.push(eachRecord.sfid);
+    })
+    console.log('IDSET are :'+sId);
+    let qry ='Select sfid ,Activity_Code__c FROM salesforce.Milestone1_Task__c where sfid IS NOT NULL AND Project_Milestone__c IN ($1,$2,$3,$4,$5,$6)';
+    console.log('qry qry '+qry);
+    pool.query(qry,[sId[0],sId[1],sId[2],sId[3],sId[4],sId[5]]) 
+  ///  let qry='Select sfid ,Activity_Code__c FROM salesforce.Milestone1_Task__c where sfid IS NOT NULL AND Project_Milestone__c IN '+'('+ sId+')';
+  //  console.log('qriesssss +'+ qry); 
+ //   pool.query(qry,[sId])
+    .then((result)=>{
+      console.log('result TAsk '+ JSON.stringify(result));
+      if(result.rowCount>0)
+      {
+        var modifiedList=[],i=1
+        result.rows.forEach((eachRecord)=>{
+          let obj={};
+          obj.sequence=i;
+          obj.taskId=eachRecord.sfid;
+          obj.activityCode=eachRecord.activity_code__c;
+          i=i+1;
+          modifiedList.push(obj);
+        })
+        console.log('modified list '+JSON.stringify(modifiedList));
+        response.send(modifiedList)
+      }
+      else
+      {
+        response('[]');
+      }
+    })
+    .catch((error)=>{
+      console.log('error'+error.stack);
+      response.send(error);
+    })
+  })
+  .catch((queryEr)=>{
+    console.log('queryEr'+queryEr.stack);
+    response.send(queryEr);
+  })
+})
+/* 
+router.get('/taskdetail',verify,(request,response)=>{
+  let idsProject='a030p0000018ScOAAU';
+  pool.query('select sfid, from salesforce.Milestone1_Task__c where sfid IS NOT NULL')
+  .then((queryResult)=>{
+    console.log('queryResult '+JSON.stringify(queryResult));
+    let result=JSON.stringify(queryResult.rows);
+    response.render('taskcode',{idsProject},{result});
+  })
+});
+router.get('/fetchtaskdetail',verify,(request,response)=>{
+ let fetchQuerry='SELECT sfid ,name FROM salesforce.Milestone1_Task__c  WHERE Project_Milestone__c.project__c =$1';
+ console.log('fetchQuerry '+fetchQuerry);
+ let idsProject='a030p0000018ScOAAU';
+ pool
+ .query(fetchQuerry,[idsProject])
+.then((querrtResult)=>{
+  console.log('queryyResult '+JSON.stringify(querrtResult.rows))
+  response.send('taskCode',{querrtResult});
+})
+.catch((QueryError)=>{
+  console.log('QueryError '+QueryError.stack);
+  response.send(QueryError);
+})
+});
+ */
+
+ module.exports = router;
